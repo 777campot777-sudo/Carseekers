@@ -30,7 +30,7 @@
     <!-- Header -->
     <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('search')">
                 <div class="bg-brand-600 text-white p-2 rounded-lg font-bold text-xl tracking-wider">CS</div>
                 <span class="text-xl font-extrabold tracking-tight text-white">Carseekers</span>
             </div>
@@ -87,6 +87,17 @@
             </div>
         </section>
 
+        <!-- DETAIL TAB -->
+        <section id="section-detail" class="hidden space-y-6 max-w-4xl mx-auto">
+            <button onclick="switchTab('search')" class="inline-flex items-center text-sm text-brand-400 hover:text-brand-300 font-medium transition-colors">
+                &larr; Назад к каталогу
+            </button>
+            
+            <div id="car-detail-content" class="bg-slate-800 border border-slate-700 rounded-xl p-6 sm:p-8 shadow-xl space-y-6">
+                <!-- Заполняется динамически -->
+            </div>
+        </section>
+
         <!-- CALCULATOR TAB -->
         <section id="section-calculator" class="hidden space-y-6">
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg max-w-2xl mx-auto">
@@ -137,10 +148,7 @@
 
     <!-- Script Logic -->
     <script>
-        // Интегрированный Project URL из панели Supabase
         const SUPABASE_URL = 'https://vlkbmqwnisxmhdbtdeyf.supabase.co';
-        
-        // Безопасный публичный ключ (Publishable key)
         const SUPABASE_ANON_KEY = 'sb_publishable_me8C_wm6h9FPtTaltjvV_Q_7jXes'; 
         
         let supabaseClient = null;
@@ -152,19 +160,23 @@
             console.error('Ошибка инициализации Supabase клиента:', e);
         }
 
-        // Хранилище лотов
         let sampleCars = [];
 
         // Переключение вкладок
         function switchTab(tabId) {
             document.getElementById('section-search').classList.add('hidden');
+            document.getElementById('section-detail').classList.add('hidden');
             document.getElementById('section-calculator').classList.add('hidden');
             
             document.getElementById('tab-search').className = 'px-3 py-2 rounded-md text-sm font-medium transition-colors text-slate-300 hover:text-white hover:bg-slate-700';
             document.getElementById('tab-calculator').className = 'px-3 py-2 rounded-md text-sm font-medium transition-colors text-slate-300 hover:text-white hover:bg-slate-700';
 
-            document.getElementById('section-' + tabId).classList.remove('hidden');
-            document.getElementById('tab-' + tabId).className = 'px-3 py-2 rounded-md text-sm font-medium transition-colors bg-brand-600 text-white';
+            if (tabId === 'search' || tabId === 'calculator') {
+                document.getElementById('section-' + tabId).classList.remove('hidden');
+                document.getElementById('tab-' + tabId).className = 'px-3 py-2 rounded-md text-sm font-medium transition-colors bg-brand-600 text-white';
+            } else if (tabId === 'detail') {
+                document.getElementById('section-detail').classList.remove('hidden');
+            }
         }
 
         // Загрузка лотов из Supabase
@@ -190,7 +202,6 @@
             applyFilters();
         }
 
-        // Резервные данные, если база пуста или таблица еще не создана
         function loadFallbackCars() {
             sampleCars = [
                 { id: 1, make: 'BMW', model: 'BMW 530e xDrive Hybrid', year: 2018, price: 11500, mileage: 68000, doc: 'Salvage', damage: 'Front End', key: 'yes', auction: 'copart', lot: '48291024' },
@@ -198,7 +209,7 @@
             ];
         }
 
-        // Применение фильтров и рендеринг карточек
+        // Применение фильтров
         function applyFilters() {
             const make = document.getElementById('filter-make').value;
             const auction = document.getElementById('filter-auction').value;
@@ -216,7 +227,7 @@
             renderCars(filtered);
         }
 
-        // Отрисовка карточек машин
+        // Отрисовка карточек
         function renderCars(cars) {
             const grid = document.getElementById('cars-grid');
             grid.innerHTML = '';
@@ -248,14 +259,68 @@
                             <span class="text-xs text-slate-400 block">Ставка / Цена</span>
                             <span class="text-xl font-extrabold text-white">$${car.price ? car.price.toLocaleString() : '0'}</span>
                         </div>
-                        <button onclick="alert('Переход к деталям лота ${car.lot}')" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">Подробнее</button>
+                        <button onclick="openCarDetail('${car.lot}')" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">Подробнее</button>
                     </div>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        // Расчет в калькуляторе
+        // Открытие детальной страницы лота
+        function openCarDetail(lotNumber) {
+            const car = sampleCars.find(c => String(c.lot) === String(lotNumber));
+            if (!car) return;
+
+            const container = document.getElementById('car-detail-content');
+            container.innerHTML = `
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700 pb-4">
+                    <div>
+                        <span class="text-xs uppercase font-bold tracking-wider px-2.5 py-1 bg-brand-600/20 text-brand-400 rounded">${car.auction || 'auction'}</span>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold text-white mt-2">${car.year} ${car.model}</h1>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <span class="text-xs text-slate-400 block">Номер лота</span>
+                        <span class="text-lg font-mono font-bold text-white">${car.lot || 'N/A'}</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                    <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60">
+                        <span class="text-xs text-slate-400 block">Цена на аукционе</span>
+                        <span class="text-xl font-bold text-white">$${car.price ? car.price.toLocaleString() : '0'}</span>
+                    </div>
+                    <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60">
+                        <span class="text-xs text-slate-400 block">Пробег</span>
+                        <span class="text-xl font-bold text-white">${car.mileage ? car.mileage.toLocaleString() + ' mi' : 'N/A'}</span>
+                    </div>
+                    <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60">
+                        <span class="text-xs text-slate-400 block">Тип документа</span>
+                        <span class="text-xl font-bold text-white">${car.doc || 'N/A'}</span>
+                    </div>
+                    <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60">
+                        <span class="text-xs text-slate-400 block">Характер повреждения</span>
+                        <span class="text-xl font-bold text-white">${car.damage || 'N/A'}</span>
+                    </div>
+                    <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60">
+                        <span class="text-xs text-slate-400 block">Наличие ключа</span>
+                        <span class="text-xl font-bold text-white">${car.key === 'yes' ? 'Есть' : 'Нет'}</span>
+                    </div>
+                    <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60">
+                        <span class="text-xs text-slate-400 block">Марка</span>
+                        <span class="text-xl font-bold text-white">${car.make || 'N/A'}</span>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-700 flex flex-col sm:flex-row gap-4 justify-between items-center">
+                    <p class="text-sm text-slate-400">Хотите рассчитать точную стоимость доставки и растаможки этого авто?</p>
+                    <button onclick="switchTab('calculator')" class="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white font-medium px-6 py-2.5 rounded-lg transition-colors">Перейти в калькулятор</button>
+                </div>
+            `;
+
+            switchTab('detail');
+        }
+
+        // Калькулятор
         function calculate() {
             const price = parseFloat(document.getElementById('calc-price').value) || 0;
             const engine = parseFloat(document.getElementById('calc-engine').value) || 2000;
@@ -273,7 +338,6 @@
             document.getElementById('res-total').innerText = '$' + Math.round(total).toLocaleString();
         }
 
-        // Инициализация при загрузке страницы
         window.onload = function() {
             fetchCarsFromSupabase();
             calculate();
