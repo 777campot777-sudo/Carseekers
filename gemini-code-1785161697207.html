@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carseekers — Профессиональный подбор авто из США</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Подключаем библиотеку Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #2563EB;
+            --primary-hover: #1D4ED8;
+            --dark: #0F172A;
+            --gray-text: #64748B;
+            --light-bg: #F8FAFC;
+            --white: #FFFFFF;
+            --border: #E2E8F0;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        header {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--dark);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--gray-text);
+            font-weight: 600;
+            font-size: 15px;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .lang-switch {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-text);
+            cursor: pointer;
+            background: none;
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: var(--white);
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--light-bg);
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--white);
+            padding: 60px 24px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 38px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: 16px;
+            color: #94A3B8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 24px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .section-desc {
+            color: var(--gray-text);
+            margin-bottom: 24px;
+            font-size: 15px;
+        }
+
+        /* РАСШИРЕННЫЙ ПОИСК КОПАРТ СТИЛЬ */
+        .advanced-search-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .advanced-search-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .filters-sidebar {
+            background: var(--white);
+            padding: 24px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .filters-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+
+        .filter-group select, .filter-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            background: var(--light-bg);
+        }
+
+        .filter-group select:focus, .filter-group input:focus {
+            border-color: var(--primary);
+            background: var(--white);
+        }
+
+        .range-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--dark);
+        }
+
+        .checkbox-label input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .search-results-area {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .search-top-bar {
+            background: var(--white);
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .search-input-main {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input-main input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 15px;
+            outline: none;
+            background: var(--light-bg);
+        }
+        .search-input-main input:focus {
+            border-color: var(--primary);
+            background: var(--white);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .car-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .car-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .car-img-wrap {
+            height: 190px;
+            background: #E2E8F0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-text);
+            font-weight: 600;
+        }
+
+        .car-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(15, 23, 42, 0.85);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .car-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            justify-content: space-between;
+        }
+
+        .car-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--dark);
+        }
+
+        .car-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 12px 0;
+            font-size: 13px;
+            color: var(--gray-text);
+        }
+
+        .car-details-grid strong {
+            color: var(--dark);
+        }
+
+        .car-price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+            margin-top: 10px;
+        }
+
+        .bid-btn {
+            background: var(--primary);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+        .bid-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Калькулятор */
+        .calc-wrapper {
+            background: var(--white);
+            padding: 40px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+        }
+        @media (max-width: 900px) {
+            .calc-wrapper {
+                grid-template-columns: 1fr !important;
+                padding: 24px !important;
+            }
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--dark);
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            outline: none;
+            background: var(--light-bg);
+        }
+        .settings-toggle {
+            background: #F1F5F9;
+            border: 1px solid var(--border);
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .settings-panel {
+            background: #F8FAFC;
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+            display: none;
+        }
+        .settings-panel.open {
+            display: block;
+        }
+        .calc-result {
+            background: var(--light-bg);
+            padding: 32px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--gray-text);
+        }
+        .calc-row span:last-child {
+            color: var(--dark);
+            font-weight: 600;
+        }
+        .calc-total {
+            border-top: 2px solid var(--border);
+            padding-top: 20px;
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Трекинг */
+        .tracking-box {
+            background: var(--white);
+            padding: 40px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            margin: 40px 0 20px;
+            position: relative;
+        }
+        @media (max-width: 768px) {
+            .steps {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+        .step-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--light-bg);
+            border: 2px solid var(--border);
+            color: var(--gray-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-weight: 700;
+            font-size: 15px;
+        }
+        .step.active .step-circle {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+        }
+        .step.completed .step-circle {
+            background: var(--success);
+            border-color: var(--success);
+            color: #fff;
+        }
+        .step-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-text);
+        }
+        .step.active .step-title, .step.completed .step-title {
+            color: var(--dark);
+        }
+
+        /* Заявка */
+        .request-card {
+            background: var(--white);
+            padding: 40px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="#" class="logo">CAR<span>SEEKERS</span></a>
+            <ul class="nav-links">
+                <li><a class="active" onclick="switchTab('search', event)" data-i18n="navSearch">Расширенный поиск</a></li>
+                <li><a onclick="switchTab('calculator', event)" data-i18n="navCalc">Калькулятор</a></li>
+                <li><a onclick="switchTab('tracking', event)" data-i18n="navTracking">Трекинг заказа</a></li>
+                <li><a onclick="switchTab('request', event)" data-i18n="navRequest">Заявка</a></li>
+            </ul>
+            <div class="header-actions">
+                <button class="lang-switch" id="langBtn" onclick="toggleLanguage()">UA / RU</button>
+                <button class="btn" onclick="switchTab('request', event)" data-i18n="btnStart">Начать подбор</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="hero">
+        <h1 data-i18n="heroTitle">Расширенный поиск по аукционам США</h1>
+        <p data-i18n="heroDesc">Используйте детальные фильтры Copart (характер повреждений, типы документов, пробег и год) для точного подбора.</p>
+    </div>
+
+    <div class="container">
+        
+        <!-- РАСШИРЕННЫЙ ПОИСК С ФИЛЬТРАМИ -->
+        <div id="search" class="section active">
+            <h2 data-i18n="searchHeader">База лотов Copart / IAAI</h2>
+            <p class="section-desc" data-i18n="searchDesc">Настройте параметры фильтрации или введите конкретную модель/номер лота.</p>
+            
+            <div class="advanced-search-layout">
+                
+                <!-- САЙДБАР С ФИЛЬТРАМИ -->
+                <aside class="filters-sidebar">
+                    <div class="filters-header">
+                        <h3 data-i18n="filtersTitle">Фильтры поисковой выдачи</h3>
+                        <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="resetFilters()" data-i18n="btnReset">Сбросить</button>
+                    </div>
+
+                    <div class="filter-group">
+                        <label data-i18n="labelAuction">Аукцион</label>
+                        <select id="filterAuction" onchange="applyFilters()">
+                            <option value="copart">Copart</option>
+                            <option value="iaai">IAAI</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label data-i18n="labelMake">Марка автомобиля</label>
+                        <select id="filterMake" onchange="applyFilters()">
+                            <option value="" data-i18n="optAllMakes">Все марки</option>
+                            <option value="BMW">BMW</option>
+                            <option value="Audi">Audi</option>
+                            <option value="Tesla">Tesla</option>
+                            <option value="Ford">Ford</option>
+                            <option value="Mercedes">Mercedes-Benz</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label data-i18n="labelYears">Диапазон годов выпуска</label>
+                        <div class="range-inputs">
+                            <input type="number" id="filterYearFrom" placeholder="От" value="2015" oninput="applyFilters()">
+                            <input type="number" id="filterYearTo" placeholder="До" value="2026" oninput="applyFilters()">
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label data-i18n="labelDoc">Тип документа (Title Type)</label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-label"><input type="checkbox" class="doc-chk" value="Clean Title" checked onchange="applyFilters()"> Clean Title (Чистый)</label>
+                            <label class="checkbox-label"><input type="checkbox" class="doc-chk" value="Salvage" checked onchange="applyFilters()"> Salvage (Восстановленный)</label>
+                            <label class="checkbox-label"><input type="checkbox" class="doc-chk" value="Certificate of Title" checked onchange="applyFilters()"> Certificate of Title</label>
+                            <label class="checkbox-label"><input type="checkbox" class="doc-chk" value="Bill of Sale" onchange="applyFilters()"> Bill of Sale</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label data-i18n="labelDamage">Характер повреждений (Damage)</label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-label"><input type="checkbox" class="dmg-chk" value="Front End" checked onchange="applyFilters()"> Front End (Перед)</label>
+                            <label class="checkbox-label"><input type="checkbox" class="dmg-chk" value="Rear" checked onchange="applyFilters()"> Rear (Зад)</label>
+                            <label class="checkbox-label"><input type="checkbox" class="dmg-chk" value="Side" checked onchange="applyFilters()"> Side (Бок)</label>
+                            <label class="checkbox-label"><input type="checkbox" class="dmg-chk" value="Minor Dent/Scratches" checked onchange="applyFilters()"> Minor Scratches</label>
+                            <label class="checkbox-label"><input type="checkbox" class="dmg-chk" value="Hail" checked onchange="applyFilters()"> Hail (Град)</label>
+                            <label class="checkbox-label"><input type="checkbox" class="dmg-chk" value="Water/Flood" onchange="applyFilters()"> Water / Flood (Утопленник)</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label data-i18n="labelMileage">Максимальный пробег (миль)</label>
+                        <input type="number" id="filterMaxMileage" placeholder="например, 80000" value="150000" oninput="applyFilters()">
+                    </div>
+
+                    <div class="filter-group">
+                        <label data-i18n="labelKey">Статус ключа</label>
+                        <select id="filterKey" onchange="applyFilters()">
+                            <option value="" data-i18n="optKeyAny">Не важно</option>
+                            <option value="yes" data-i18n="optKeyYes">Ключ в наличии (Yes)</option>
+                            <option value="no" data-i18n="optKeyNo">Без ключа (No)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn" style="width: 100%; margin-top: 10px;" onclick="openOfficialCopartSearch()" data-i18n="btnCopartOpen">Открыть полный поиск на Copart ↗</button>
+                </aside>
+
+                <!-- ОБЛАСТЬ РЕЗУЛЬТАТОВ -->
+                <div class="search-results-area">
+                    <div class="search-top-bar">
+                        <div class="search-input-main">
+                            <input type="text" id="searchInput" placeholder="Поиск по модели, VIN или номеру лота..." oninput="applyFilters()" data-i18n-placeholder="searchPlaceholder">
+                        </div>
+                        <button class="btn" onclick="applyFilters()" data-i18n="btnFindLots">Найти лоты</button>
+                    </div>
+
+                    <div style="font-size: 14px; color: var(--gray-text); font-weight: 600;" id="resultsCount">
+                        Найдено лотов: загрузка...
+                    </div>
+
+                    <div class="results-grid" id="resultsGrid">
+                        <!-- Карточки генерируются скриптом -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- КАЛЬКУЛЯТОР -->
+        <div id="calculator" class="section">
+            <h2 data-i18n="calcHeader">Калькулятор и авторасчет под ключ</h2>
+            <p class="section-desc" data-i18n="calcDesc">Расчет ставки, аукционного сбора, логистики по США, фрахта, брокера и растаможки.</p>
+            
+            <button class="settings-toggle" onclick="toggleSettings()">
+                <span data-i18n="calcSettingsTitle">⚙️ Панель управления базовыми тарифами компании</span>
+                <span id="arrowIcon">▼</span>
+            </button>
+
+            <div id="settingsPanel" class="settings-panel">
+                <h3 style="font-size: 16px; margin-bottom: 14px; font-weight: 700;" data-i18n="calcFixedFees">Фиксированные сборы:</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label data-i18n="labelAuctionFee">Аукционный сбор (%)</label>
+                        <input type="number" id="settingAuctionFeePct" value="12" oninput="calculate()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label data-i18n="labelCompanyService">Услуги компании ($)</label>
+                        <input type="number" id="settingCompanyService" value="500" oninput="calculate()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label data-i18n="labelBroker">Брокер и экспедирование ($)</label>
+                        <input type="number" id="settingBroker" value="900" oninput="calculate()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label data-i18n="labelUaDelivery">Доставка по Украине ($)</label>
+                        <input type="number" id="settingUaDelivery" value="400" oninput="calculate()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="calc-wrapper">
+                <div>
+                    <div class="form-group">
+                        <label data-i18n="labelBidPrice">Стоимость лота на аукционе ($)</label>
+                        <input type="number" id="bidPrice" value="12000" oninput="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="labelUsState">Штат аукциона в США</label>
+                        <select id="usState" onchange="calculate()">
+                            <option value="near" data-i18n="optStateNear">Ближние штаты (Нью-Джерси, Нью-Йорк) — $400</option>
+                            <option value="mid" selected data-i18n="optStateMid">Средние штаты (Техас, Флорида, Иллинойс) — $650</option>
+                            <option value="far" data-i18n="optStateFar">Отдаленные штаты (Калифорния, Вашингтон) — $950</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="labelCarClass">Класс автомобиля</label>
+                        <select id="carClass" onchange="calculate()">
+                            <option value="sedan" selected data-i18n="optClassSedan">Седан / Купе / Хэтчбек — $1,350</option>
+                            <option value="suv" data-i18n="optClassSuv">Кроссовер / SUV — $1,550</option>
+                            <option value="pickup" data-i18n="optClassPickup">Пикап / Большой SUV — $1,850</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="labelEngineVolume">Объем двигателя (см³)</label>
+                        <input type="number" id="engineVolume" value="2000" oninput="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="labelFuelType">Тип топлива</label>
+                        <select id="fuelType" onchange="calculate()">
+                            <option value="petrol" data-i18n="optFuelPetrol">Бензин</option>
+                            <option value="diesel" data-i18n="optFuelDiesel">Дизель</option>
+                            <option value="hybrid" data-i18n="optFuelHybrid">Гибрид</option>
+                            <option value="electric" data-i18n="optFuelElectric">Электро</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="labelCarYear">Год выпуска</label>
+                        <input type="number" id="carYear" value="2018" oninput="calculate()">
+                    </div>
+                </div>
+                <div class="calc-result">
+                    <div>
+                        <h3 style="margin-bottom: 20px; font-size: 18px;" data-i18n="calcStructureHeader">Структура расходов:</h3>
+                        <div class="calc-row"><span data-i18n="calcRowBid">Лот + аукционный сбор:</span> <span id="resBid">$13,500</span></div>
+                        <div class="calc-row"><span data-i18n="calcRowCompany">Услуги компании:</span> <span id="resCompanyServiceShow">$500</span></div>
+                        <div class="calc-row"><span data-i18n="calcRowFreight">Логистика (Эвакуатор + Фрахт):</span> <span id="resFreightShow">$2,000</span></div>
+                        <div class="calc-row"><span data-i18n="calcRowBroker">Экспедирование и брокер:</span> <span id="resBrokerShow">$900</span></div>
+                        <div class="calc-row"><span data-i18n="calcRowCustoms">Растаможка (пошлина, акциз, НДС):</span> <span id="resCustoms">$3,400</span></div>
+                        <div class="calc-row"><span data-i18n="calcRowUa">Доставка по Украине:</span> <span id="resUaShow">$400</span></div>
+                    </div>
+                    <div class="calc-total">
+                        <span data-i18n="calcTotal">Итого под ключ:</span>
+                        <span id="resTotal" style="color: var(--primary);">$20,700</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ТРЕКИНГ -->
+        <div id="tracking" class="section">
+            <h2 data-i18n="trackHeader">Отслеживание заказа</h2>
+            <p class="section-desc" data-i18n="trackDesc">Контролируйте каждый этап передвижения вашего автомобиля в реальном времени по номеру контейнера.</p>
+            
+            <div class="tracking-box">
+                <div style="background: var(--light-bg); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 24px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px;" data-i18n="trackInputLabel">Введите номер контейнера или VIN:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="trackingQueryInput" placeholder="например, MSCU928102" style="flex: 1; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; background: #fff;">
+                        <button class="btn" onclick="searchContainer()" data-i18n="trackBtnCheck">Проверить статус</button>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h3 id="displayContainerTitle" style="font-size: 18px; font-weight: 700;">BMW 530i xDrive (Контейнер: #MSCU928102)</h3>
+                        <p style="color: var(--gray-text); font-size: 14px; margin-top: 4px;" data-i18n="trackLineInfo">Морская линия: MSC / Maersk</p>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <span id="displayContainerStatusBadge" style="background: #E0F2FE; color: #0369A1; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 13px;" data-i18n="trackStatusSea">В пути морем</span>
+                        <a id="externalTrackerLink" href="https://www.searates.com/container/tracking?container=MSCU928102" target="_blank" class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;" data-i18n="trackExternalBtn">Трекер линии ↗</a>
+                    </div>
+                </div>
+
+                <!-- Подсказка для проверки реального положения судна на карте -->
+                <div style="background: #F8FAFC; border: 1px solid var(--border); padding: 14px 16px; border-radius: 8px; margin-bottom: 24px; font-size: 13px; color: var(--gray-text);">
+                    <span data-i18n="trackMapTip">Если трекер линии задерживает обновление статуса, посмотрите точное местоположение судна в реальном времени на карте:</span> 
+                    <a href="https://www.marinetraffic.com" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: none;" data-i18n="trackMapLink">MarineTraffic ↗</a>
+                </div>
+                
+                <div class="steps">
+                    <div class="step completed"><div class="step-circle">✓</div><div class="step-title" data-i18n="step1">Выкуплен</div></div>
+                    <div class="step completed"><div class="step-circle">✓</div><div class="step-title" data-i18n="step2">В порту США</div></div>
+                    <div class="step active"><div class="step-circle">3</div><div class="step-title" data-i18n="step3">В пути морем</div></div>
+                    <div class="step"><div class="step-circle">4</div><div class="step-title" data-i18n="step4">Порт Европы</div></div>
+                    <div class="step"><div class="step-circle">5</div><div class="step-title" data-i18n="step5">Таможня</div></div>
+                    <div class="step"><div class="step-circle">6</div><div class="step-title" data-i18n="step6">Доставлен</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЗАЯВКА -->
+        <div id="request" class="section">
+            <div class="request-card">
+                <h2 style="text-align: center; margin-bottom: 8px;" data-i18n="reqHeader">Заявка на подбор авто</h2>
+                <p style="text-align: center; color: var(--gray-text); margin-bottom: 32px; font-size: 14px;" data-i18n="reqDesc">Заполните форму, и мы свяжемся с вами для согласования параметров.</p>
+                <div class="form-group"><label data-i18n="reqName">Ваше имя</label><input type="text" placeholder="Иван"></div>
+                <div class="form-group"><label data-i18n="reqPhone">Телефон / Telegram</label><input type="text" placeholder="+380 (XX) XXX-XX-XX"></div>
+                <div class="form-group"><label data-i18n="reqModel">Марка и модель</label><input type="text" placeholder="например, BMW 5 Series"></div>
+                <div class="form-group"><label data-i18n="reqBudget">Бюджет под ключ ($)</label><input type="number" placeholder="20000"></div>
+                <button class="btn" style="width: 100%; padding: 16px; font-size: 16px;" onclick="alert('Заявка успешно отправлена! Мы свяжемся с вами.')" data-i18n="btnSendReq">Отправить заявку</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Инициализация подключения к Supabase с твоим ключом
+        const SUPABASE_URL = 'https://vlkbmqwnisxmhdbtdeyf.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_me8C_wm6h9FpTTa1tjvV_Q_7jXesbJR'; 
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const translations = {
+            ru: {
+                navSearch: "Расширенный поиск",
+                navCalc: "Калькулятор",
+                navTracking: "Трекинг заказа",
+                navRequest: "Заявка",
+                btnStart: "Начать подбор",
+                heroTitle: "Расширенный поиск по аукционам США",
+                heroDesc: "Используйте детальные фильтры Copart (характер повреждений, типы документов, пробег и год) для точного подбора.",
+                searchHeader: "База лотов Copart / IAAI",
+                searchDesc: "Настройте параметры фильтрации или введите конкретную модель/номер лота.",
+                filtersTitle: "Фильтры поисковой выдачи",
+                btnReset: "Сбросить",
+                labelAuction: "Аукцион",
+                labelMake: "Марка автомобиля",
+                optAllMakes: "Все марки",
+                labelYears: "Диапазон годов выпуска",
+                labelDoc: "Тип документа (Title Type)",
+                labelDamage: "Характер повреждений (Damage)",
+                labelMileage: "Максимальный пробег (миль)",
+                labelKey: "Статус ключа",
+                optKeyAny: "Не важно",
+                optKeyYes: "Ключ в наличии (Yes)",
+                optKeyNo: "Без ключа (No)",
+                btnCopartOpen: "Открыть полный поиск на Copart ↗",
+                searchPlaceholder: "Поиск по модели, VIN или номеру лота...",
+                btnFindLots: "Найти лоты",
+                calcHeader: "Калькулятор и авторасчет под ключ",
+                calcDesc: "Расчет ставки, аукционного сбора, логистики по США, фрахта, брокера и растаможки.",
+                calcSettingsTitle: "⚙️ Панель управления базовыми тарифами компании",
+                calcFixedFees: "Фиксированные сборы:",
+                labelAuctionFee: "Аукционный сбор (%)",
+                labelCompanyService: "Услуги компании ($)",
+                labelBroker: "Брокер и экспедирование ($)",
+                labelUaDelivery: "Доставка по Украине ($)",
+                labelBidPrice: "Стоимость лота на аукционе ($)",
+                labelUsState: "Штат аукциона в США",
+                optStateNear: "Ближние штаты (Нью-Джерси, Нью-Йорк) — $400",
+                optStateMid: "Средние штаты (Техас, Флорида, Иллинойс) — $650",
+                optStateFar: "Отдаленные штаты (Калифорния, Вашингтон) — $950",
+                labelCarClass: "Класс автомобиля",
+                optClassSedan: "Седан / Купе / Хэтчбек — $1,350",
+                optClassSuv: "Кроссовер / SUV — $1,550",
+                optClassPickup: "Пикап / Большой SUV — $1,850",
+                labelEngineVolume: "Объем двигателя (см³)",
+                labelFuelType: "Тип топлива",
+                optFuelPetrol: "Бензин",
+                optFuelDiesel: "Дизель",
+                optFuelHybrid: "Гибрид",
+                optFuelElectric: "Электро",
+                labelCarYear: "Год выпуска",
+                calcStructureHeader: "Структура расходов:",
+                calcRowBid: "Лот + аукционный сбор:",
+                calcRowCompany: "Услуги компании:",
+                calcRowFreight: "Логистика (Эвакуатор + Фрахт):",
+                calcRowBroker: "Экспедирование и брокер:",
+                calcRowCustoms: "Растаможка (пошлина, акциз, НДС):",
+                calcRowUa: "Доставка по Украине:",
+                calcTotal: "Итого под ключ:",
+                trackHeader: "Отслеживание заказа",
+                trackDesc: "Контролируйте каждый этап передвижения вашего автомобиля в реальном времени по номеру контейнера.",
+                trackInputLabel: "Введите номер контейнера или VIN:",
+                trackBtnCheck: "Найти контейнер",
+                trackLineInfo: "Морская линия: MSC / Maersk / CMA CGM",
+                trackExternalBtn: "Полный трекер ↗",
+                trackStatusSea: "В пути морем",
+                trackMapTip: "Если трекер линии задерживает обновление статуса, посмотрите точное местоположение судна в реальном времени на карте:",
+                trackMapLink: "MarineTraffic ↗",
+                step1: "Выкуплен",
+                step2: "В порту США",
+                step3: "В пути морем",
+                step4: "Порт Европы",
+                step5: "Таможня",
+                step6: "Доставлен",
+                reqHeader: "Заявка на подбор авто",
+                reqDesc: "Заполните форму, и мы свяжемся с вами для согласования параметров.",
+                reqName: "Ваше имя",
+                reqPhone: "Телефон / Telegram",
+                reqModel: "Марка и модель",
+                reqBudget: "Бюджет под ключ ($)",
+                btnSendReq: "Отправить заявку",
+                carMileageLabel: "Пробег",
+                carDocLabel: "Документ",
+                carDmgLabel: "Повреждение",
+                carKeyLabel: "Ключ",
+                carKeyYes: "Да",
+                carKeyNo: "Нет",
+                photoLotText: "Фото лота с аукциона",
+                viewBtn: "Смотреть ↗",
+                notFoundText: "По вашим фильтрам ничего не найдено. Попробуйте изменить параметры поиска или нажать «Сбросить»."
+            },
+            ua: {
+                navSearch: "Розширений пошук",
+                navCalc: "Калькулятор",
+                navTracking: "Трекінг замовлення",
+                navRequest: "Заявка",
+                btnStart: "Розпочати підбір",
+                heroTitle: "Розширений пошук по аукціонах США",
+                heroDesc: "Використовуйте детальні фільтри Copart (характер пошкоджень, типи документів, пробіг і рік) для точного підбору.",
+                searchHeader: "База лотів Copart / IAAI",
+                searchDesc: "Налаштуйте параметри фільтрації або введіть конкретну модель/номер лота.",
+                filtersTitle: "Фільтри пошукової видачі",
+                btnReset: "Скинути",
+                labelAuction: "Аукціон",
+                labelMake: "Марка автомобіля",
+                optAllMakes: "Всі марки",
+                labelYears: "Діапазон років випуску",
+                labelDoc: "Тип документа (Title Type)",
+                labelDamage: "Характер пошкоджень (Damage)",
+                labelMileage: "Максимальний пробіг (миль)",
+                labelKey: "Статус ключа",
+                optKeyAny: "Не важливо",
+                optKeyYes: "Ключ в наявності (Yes)",
+                optKeyNo: "Без ключа (No)",
+                btnCopartOpen: "Відкрити повний пошук на Copart ↗",
+                searchPlaceholder: "Пошук за моделлю, VIN або номером лота...",
+                btnFindLots: "Знайти лоти",
+                calcHeader: "Калькулятор та авторозрахунок під ключ",
+                calcDesc: "Розрахунок ставки, аукційного збору, логістики по США, фрахту, брокера та розмитнення.",
+                calcSettingsTitle: "⚙️ Панель управління базовими тарифами компанії",
+                calcFixedFees: "Фіксовані збори:",
+                labelAuctionFee: "Аукційний збір (%)",
+                labelCompanyService: "Послуги компанії ($)",
+                labelBroker: "Брокер та експедирування ($)",
+                labelUaDelivery: "Доставка по Україні ($)",
+                labelBidPrice: "Вартість лота на аукціоні ($)",
+                labelUsState: "Штат аукціону в США",
+                optStateNear: "Ближні штати (Нью-Джерсі, Нью-Йорк) — $400",
+                optStateMid: "Середні штати (Техас, Флорида, Іллінойс) — $650",
+                optStateFar: "Віддалені штати (Каліфорнія, Вашингтон) — $950",
+                labelCarClass: "Клас автомобіля",
+                optClassSedan: "Седан / Купе / Хетчбек — $1,350",
+                optClassSuv: "Кросовер / SUV — $1,550",
+                optClassPickup: "Пікап / Великий SUV — $1,850",
+                labelEngineVolume: "Об'єм двигуна (см³)",
+                labelFuelType: "Тип палива",
+                optFuelPetrol: "Бензин",
+                optFuelDiesel: "Дизель",
+                optFuelHybrid: "Гібрид",
+                optFuelElectric: "Електро",
+                labelCarYear: "Рік випуску",
+                calcStructureHeader: "Структура витрат:",
+                calcRowBid: "Лот + аукційний збір:",
+                calcRowCompany: "Послуги компанії:",
+                calcRowFreight: "Логістика (Евакуатор + Фрахт):",
+                calcRowBroker: "Експедирування та брокер:",
+                calcRowCustoms: "Розмитнення (мито, акциз, ПДВ):",
+                calcRowUa: "Доставка по Україні:",
+                calcTotal: "Разом під ключ:",
+                trackHeader: "Відстеження замовлення",
+                trackDesc: "Контролюйте кожен етап пересування вашого автомобіля в реальному часі за номером контейнера.",
+                trackInputLabel: "Введіть номер контейнера або VIN:",
+                trackBtnCheck: "Знайти контейнер",
+                trackLineInfo: "Морська лінія: MSC / Maersk / CMA CGM",
+                trackExternalBtn: "Повний трекер ↗",
+                trackStatusSea: "В дорозі морем",
+                trackMapTip: "Якщо трекер лінії затримує оновлення статусу, подивіться точне місце розташування судна в реальному часі на карті:",
+                trackMapLink: "MarineTraffic ↗",
+                step1: "Викуплений",
+                step2: "У порту США",
+                step3: "В дорозі морем",
+                step4: "Порт Європи",
+                step5: "Митниця",
+                step6: "Доставлений",
+                reqHeader: "Заявка на подбор авто",
+                reqDesc: "Заповніть форму, і ми зв'яжемося з вами для узгодження параметрів.",
+                reqName: "Ваше ім'я",
+                reqPhone: "Телефон / Telegram",
+                reqModel: "Марка та модель",
+                reqBudget: "Бюджет под ключ ($)",
+                btnSendReq: "Надіслати заявку",
+                carMileageLabel: "Пробіг",
+                carDocLabel: "Документ",
+                carDmgLabel: "Пошкодження",
+                carKeyLabel: "Ключ",
+                carKeyYes: "Так",
+                carKeyNo: "Ні",
+                photoLotText: "Фото лота з аукціону",
+                viewBtn: "Дивитися ↗",
+                notFoundText: "За вашими фільтрами нічого не знайдено. Спробуйте змінити параметри пошуку або натиснути «Скинути»."
+            }
+        };
+
+        let currentLang = 'ru';
+        let mockLots = [];
+
+        async function loadCarsFromSupabase() {
+            try {
+                let { data, error } = await supabaseClient
+                    .from('copart_lots')
+                    .select('*')
+                    .eq('is_active', true)
+                    .limit(100);
+
+                if (error) {
+                    console.error('Ошибка получения данных из Supabase:', error.message);
+                    loadFallbackLots();
+                    return;
+                }
+
+                if (data && data.length > 0) {
+                    mockLots = data.map(item => ({
+                        id: item.lot_number,
+                        make: item.make || 'Other',
+                        model: `${item.make || ''} ${item.model || ''}`.trim() || 'Copart Lot',
+                        year: item.year || 2020,
+                        mileage: item.mileage || 45000,
+                        doc: item.document_type || 'Clean Title',
+                        damage: item.damage || 'Front End',
+                        key: item.key || 'yes',
+                        price: item.price || 11000,
+                        lotNum: String(item.lot_number)
+                    }));
+                } else {
+                    loadFallbackLots();
+                }
+            } catch (err) {
+                console.error('Сетевая ошибка:', err);
+                loadFallbackLots();
+            }
+            applyFilters();
+        }
+
+        function loadFallbackLots() {
+            mockLots = [
+                { id: 48291024, make: 'BMW', model: 'BMW 530i xDrive', year: 2018, mileage: 64120, doc: 'Clean Title', damage: 'Front End', key: 'yes', price: 12500, lotNum: '48291024' },
+                { id: 59382011, make: 'Tesla', model: 'Tesla Model 3 Long Range', year: 2021, mileage: 32000, doc: 'Salvage', damage: 'Side', key: 'yes', price: 14200, lotNum: '59382011' },
+                { id: 38291092, make: 'Audi', model: 'Audi A4 Prestige', year: 2017, mileage: 89000, doc: 'Clean Title', damage: 'Minor Dent/Scratches', key: 'yes', price: 9800, lotNum: '38291092' }
+            ];
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ru' ? 'ua' : 'ru';
+            document.getElementById('langBtn').innerText = currentLang === 'ru' ? 'UA / RU' : 'RU / UA';
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                let key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    el.innerText = translations[currentLang][key];
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                let key = el.getAttribute('data-i18n-placeholder');
+                if (translations[currentLang][key]) {
+                    el.placeholder = translations[currentLang][key];
+                }
+            });
+
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let searchText = document.getElementById('searchInput').value.toLowerCase().trim();
+            let selectedMake = document.getElementById('filterMake').value;
+            let yearFrom = parseInt(document.getElementById('filterYearFrom').value) || 0;
+            let yearTo = parseInt(document.getElementById('filterYearTo').value) || 3000;
+            let maxMileage = parseInt(document.getElementById('filterMaxMileage').value) || 999999;
+            let keyFilter = document.getElementById('filterKey').value;
+
+            let selectedDocs = Array.from(document.querySelectorAll('.doc-chk:checked')).map(el => el.value);
+            let selectedDmgs = Array.from(document.querySelectorAll('.dmg-chk:checked')).map(el => el.value);
+
+            let filtered = mockLots.filter(car => {
+                let matchesSearch = searchText === '' || car.model.toLowerCase().includes(searchText) || car.lotNum.includes(searchText);
+                let matchesMake = selectedMake === '' || car.make === selectedMake;
+                let matchesYear = car.year >= yearFrom && car.year <= yearTo;
+                let matchesMileage = car.mileage <= maxMileage;
+                
+                let matchesDoc = selectedDocs.length === 0 || selectedDocs.includes(car.doc);
+                let matchesDmg = selectedDmgs.length === 0 || selectedDmgs.includes(car.damage);
+                let matchesKey = keyFilter === '' || car.key === keyFilter;
+
+                return matchesSearch && matchesMake && matchesYear && matchesMileage && matchesDoc && matchesDmg && matchesKey;
+            });
+
+            renderResults(filtered);
+        }
+
+        function renderResults(cars) {
+            let grid = document.getElementById('resultsGrid');
+            let countLabel = document.getElementById('resultsCount');
+            let t = translations[currentLang];
+            
+            countLabel.innerText = (currentLang === 'ru' ? "Найдено лотов: " : "Знайдено лотів: ") + cars.length;
+
+            if (cars.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray-text); background: #fff; border-radius: 12px; border: 1px solid var(--border);">${t.notFoundText}</div>`;
+                return;
+            }
+
+            let html = '';
+            cars.forEach(car => {
+                let keyText = car.key === 'yes' ? t.carKeyYes : t.carKeyNo;
+                html += `
+                    <div class="car-card">
+                        <div class="car-img-wrap">
+                            <span class="car-badge">Лот: ${car.lotNum}</span>
+                            <span>${t.photoLotText}</span>
+                        </div>
+                        <div class="car-content">
+                            <div>
+                                <div class="car-title">${car.model} (${car.year})</div>
+                                <div class="car-details-grid">
+                                    <div>${t.carMileageLabel}: <strong>${car.mileage.toLocaleString()} миль</strong></div>
+                                    <div>${t.carDocLabel}: <strong>${car.doc}</strong></div>
+                                    <div>${t.carDmgLabel}: <strong>${car.damage}</strong></div>
+                                    <div>${t.carKeyLabel}: <strong>${keyText}</strong></div>
+                                </div>
+                            </div>
+                            <div class="car-price-row">
+                                <span style="font-size: 16px; font-weight: 800; color: var(--primary);">от $${car.price.toLocaleString()}</span>
+                                <a href="https://www.copart.com/ru/lotSearchResults?q=${car.lotNum}" target="_blank" class="bid-btn">${t.viewBtn}</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterMake').value = '';
+            document.getElementById('filterYearFrom').value = '2015';
+            document.getElementById('filterYearTo').value = '2026';
+            document.getElementById('filterMaxMileage').value = '150000';
+            document.getElementById('filterKey').value = '';
+            
+            document.querySelectorAll('.doc-chk').forEach(el => el.checked = true);
+            document.querySelectorAll('.dmg-chk').forEach(el => el.checked = true);
+            
+            applyFilters();
+        }
+
+        function openOfficialCopartSearch() {
+            let make = document.getElementById('filterMake').value;
+            let query = make ? make : document.getElementById('searchInput').value.trim();
+            let url = `https://www.copart.com/ru/lotSearchResults?q=${encodeURIComponent(query || 'BMW')}`;
+            window.open(url, '_blank');
+        }
+
+        function switchTab(tabId, event) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            
+            if (event && event.target && event.target.tagName === 'A') {
+                event.target.classList.add('active');
+            } else {
+                document.querySelectorAll('.nav-links a').forEach(a => {
+                    let onclickAttr = a.getAttribute('onclick') || '';
+                    if (onclickAttr.includes(tabId)) {
+                        a.classList.add('active');
+                    }
+                });
+            }
+        }
+
+        function toggleSettings() {
+            let panel = document.getElementById('settingsPanel');
+            let icon = document.getElementById('arrowIcon');
+            panel.classList.toggle('open');
+            icon.innerText = panel.classList.contains('open') ? '▲' : '▼';
+        }
+
+        function searchContainer() {
+            let inputVal = document.getElementById('trackingQueryInput').value.trim();
+            if (!inputVal) {
+                alert(currentLang === 'ru' ? 'Пожалуйста, введите номер контейнера!' : 'Будь ласка, введіть номер контейнера!');
+                return;
+            }
+            document.getElementById('displayContainerTitle').innerText = `Автомобиль в пути (Контейнер: #${inputVal.toUpperCase()})`;
+            let trackerUrl = `https://www.searates.com/container/tracking?container=${encodeURIComponent(inputVal)}`;
+            document.getElementById('externalTrackerLink').href = trackerUrl;
+            window.open(trackerUrl, '_blank');
+        }
+
+        function calculate() {
+            let bid = parseFloat(document.getElementById('bidPrice').value) || 0;
+            let volume = parseFloat(document.getElementById('engineVolume').value) || 0;
+            let year = parseInt(document.getElementById('carYear').value) || 2018;
+            
+            let stateVal = document.getElementById('usState').value;
+            let inlandShipping = 650; 
+            if (stateVal === 'near') inlandShipping = 400;
+            if (stateVal === 'far') inlandShipping = 950;
+
+            let classVal = document.getElementById('carClass').value;
+            let oceanFreight = 1350; 
+            if (classVal === 'suv') oceanFreight = 1550;
+            if (classVal === 'pickup') oceanFreight = 1850;
+
+            let totalFreight = inlandShipping + oceanFreight;
+
+            let feePct = parseFloat(document.getElementById('settingAuctionFeePct').value) || 0;
+            let companyService = parseFloat(document.getElementById('settingCompanyService').value) || 0;
+            let brokerCost = parseFloat(document.getElementById('settingBroker').value) || 0;
+            let uaDeliveryCost = parseFloat(document.getElementById('settingUaDelivery').value) || 0;
+
+            let auctionFee = bid * (feePct / 100);
+            let totalBid = bid + auctionFee;
+            document.getElementById('resBid').innerText = '$' + Math.round(totalBid).toLocaleString();
+
+            document.getElementById('resCompanyServiceShow').innerText = '$' + Math.round(companyService).toLocaleString();
+            document.getElementById('resFreightShow').innerText = '$' + Math.round(totalFreight).toLocaleString();
+            document.getElementById('resBrokerShow').innerText = '$' + Math.round(brokerCost).toLocaleString();
+            document.getElementById('resUaShow').innerText = '$' + Math.round(uaDeliveryCost).toLocaleString();
+
+            let age = 2026 - year;
+            if (age < 1) age = 1;
+            let baseRate = volume <= 3000 ? 50 : 100;
+            let excise = baseRate * (volume / 1000) * age;
+            let duty = totalBid * 0.10;
+            let vat = (totalBid + duty + excise) * 0.20;
+            let customs = duty + excise + vat;
+
+            document.getElementById('resCustoms').innerText = '$' + Math.round(customs).toLocaleString();
+
+            let total = totalBid + companyService + totalFreight + brokerCost + customs + uaDeliveryCost;
+            document.getElementById('resTotal').innerText = '$' + Math.round(total).toLocaleString();
+        }
+
+        loadCarsFromSupabase();
+        calculate();
+    </script>
+</body>
+</html>
