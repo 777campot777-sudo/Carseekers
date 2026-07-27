@@ -28,13 +28,13 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
 
     <!-- Header -->
-    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
+    <header class="bg-slate-900/85 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('search')">
                 <div class="bg-brand-600 text-white p-2 rounded-xl font-extrabold text-xl tracking-wider shadow-lg shadow-brand-500/20">CS</div>
                 <div>
                     <span class="text-xl font-extrabold tracking-tight text-white block leading-none">Carseekers</span>
-                    <span class="text-[10px] text-brand-400 font-semibold tracking-widest uppercase">Copart & IAAI Engine</span>
+                    <span class="text-[10px] text-brand-400 font-semibold tracking-widest uppercase">Auction Engine</span>
                 </div>
             </div>
             <nav class="flex space-x-1 sm:space-x-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
@@ -48,182 +48,159 @@
     <!-- Main Content -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-6">
 
-        <!-- SEARCH TAB & COPART ADVANCED FILTERS -->
+        <!-- SEARCH TAB & STRUCTURED FILTERS -->
         <section id="section-search" class="space-y-6">
             
-            <!-- Search & Filter Card -->
-            <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 shadow-2xl space-y-5">
+            <!-- Filter Terminal Container -->
+            <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 shadow-2xl space-y-6">
                 
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
                     <div>
-                        <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Расширенный терминал поиска Copart</h1>
-                        <p class="text-xs text-slate-400 mt-0.5">Тотальная фильтрация по параметрам аукциона в реальном времени</p>
+                        <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Терминал подбора автомобилей</h1>
+                        <p class="text-xs text-slate-400 mt-0.5">Структурированный поиск по параметрам аукционов США</p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="resetFilters()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl transition-colors font-medium border border-slate-700/60">Сбросить всё</button>
-                        <button onclick="fetchCarsFromSupabase()" class="text-xs bg-brand-600 hover:bg-brand-500 text-white px-3 py-2 rounded-xl transition-colors font-semibold shadow-lg shadow-brand-600/20 flex items-center gap-1.5">
-                            <span>🔄</span> Обновить базу
+                        <button onclick="resetFilters()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-2 rounded-xl transition-colors font-medium border border-slate-700/60">Сбросить фильтры</button>
+                        <button onclick="fetchCarsFromSupabase()" class="text-xs bg-brand-600 hover:bg-brand-500 text-white px-3.5 py-2 rounded-xl transition-colors font-semibold shadow-lg shadow-brand-600/20 flex items-center gap-1.5">
+                            <span>🔄</span> Синхронизировать
                         </button>
                     </div>
                 </div>
 
-                <!-- Quick Filter Chips (Copart Style Pills) -->
-                <div class="flex flex-wrap gap-2 items-center pt-1">
-                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1">Быстрые фильтры:</span>
+                <!-- Quick Filter Chips -->
+                <div class="flex flex-wrap gap-2 items-center">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1">Быстрый отбор:</span>
                     <button onclick="setQuickFilter('key', 'yes')" class="text-xs bg-slate-800/80 hover:bg-brand-600/30 hover:border-brand-500 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700 transition-all">🔑 С ключом</button>
                     <button onclick="setQuickFilter('runAndDrive', 'yes')" class="text-xs bg-slate-800/80 hover:bg-brand-600/30 hover:border-brand-500 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700 transition-all">⚡ Run & Drive</button>
-                    <button onclick="setQuickFilter('fuel', 'Hybrid')" class="text-xs bg-slate-800/80 hover:bg-brand-600/30 hover:border-brand-500 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700 transition-all">🔋 Гибрид</button>
+                    <button onclick="setQuickFilter('fuel', 'Hybrid')" class="text-xs bg-slate-800/80 hover:bg-brand-600/30 hover:border-brand-500 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700 transition-all">🔋 Гибриды</button>
                     <button onclick="setQuickFilter('doc', 'Salvage')" class="text-xs bg-slate-800/80 hover:bg-brand-600/30 hover:border-brand-500 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700 transition-all">📄 Salvage</button>
                 </div>
 
-                <!-- Ergonomic Filter Grid (Accordion style layout) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-                    
-                    <!-- Текст / Лот / Модель -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Поиск (Модель / Лот / VIN)</label>
-                        <input type="text" id="filter-search" placeholder="Напр. 530e или 482910" oninput="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
-                    </div>
-
-                    <!-- Марка -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Марка</label>
-                        <select id="filter-make" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
-                            <option value="">Все марки</option>
-                            <option value="BMW">BMW</option>
-                            <option value="Audi">Audi</option>
-                            <option value="Mercedes-Benz">Mercedes-Benz</option>
-                            <option value="Ford">Ford</option>
-                            <option value="Tesla">Tesla</option>
-                        </select>
-                    </div>
-
-                    <!-- Аукцион -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Аукцион</label>
-                        <select id="filter-auction" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
-                            <option value="">Все площадки</option>
-                            <option value="copart">Copart</option>
-                            <option value="iaai">IAAI</option>
-                        </select>
-                    </div>
-
-                    <!-- Тип документа (Title Type) -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Тип документа</label>
-                        <select id="filter-doc" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
-                            <option value="">Любые документы</option>
-                            <option value="Salvage">Salvage (Свидетельство)</option>
-                            <option value="Clean Title">Clean Title (Чистый)</option>
-                            <option value="Certificate of Destruction">Certificate of Destruction</option>
-                            <option value="Bill of Sale">Bill of Sale</option>
-                        </select>
-                    </div>
-
-                    <!-- Год ОТ / ДО -->
-                    <div class="grid grid-cols-2 gap-2">
+                <!-- GROUP 1: Основные параметры -->
+                <div class="space-y-3 pt-2">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-brand-400 border-l-2 border-brand-500 pl-2">1. Основные параметры</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Год от</label>
-                            <input type="number" id="filter-year-min" placeholder="2015" oninput="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Поиск (Модель / Лот)</label>
+                            <input type="text" id="filter-search" placeholder="Напр. 530e или 4829" oninput="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Год до</label>
-                            <input type="number" id="filter-year-max" placeholder="2026" oninput="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Марка</label>
+                            <select id="filter-make" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                                <option value="">Все марки</option>
+                                <option value="BMW">BMW</option>
+                                <option value="Audi">Audi</option>
+                                <option value="Mercedes-Benz">Mercedes-Benz</option>
+                                <option value="Ford">Ford</option>
+                                <option value="Tesla">Tesla</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Аукцион</label>
+                            <select id="filter-auction" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                                <option value="">Все площадки</option>
+                                <option value="copart">Copart</option>
+                                <option value="iaai">IAAI</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Год от</label>
+                                <input type="number" id="filter-year-min" placeholder="2015" oninput="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Год до</label>
+                                <input type="number" id="filter-year-max" placeholder="2026" oninput="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Цена ДО -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Макс. цена ($)</label>
-                        <input type="number" id="filter-max-price" placeholder="Например, 15000" oninput="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Максимальная цена ($)</label>
+                            <input type="number" id="filter-max-price" placeholder="Например, 20000" oninput="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Максимальный пробег (mi)</label>
+                            <input type="number" id="filter-max-mileage" placeholder="Например, 80000" oninput="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                        </div>
                     </div>
+                </div>
 
-                    <!-- Пробег ДО -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Макс. пробег (mi)</label>
-                        <input type="number" id="filter-max-mileage" placeholder="Например, 75000" oninput="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                <!-- GROUP 2: Документы и Состояние -->
+                <div class="space-y-3 pt-3 border-t border-slate-800/80">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-brand-400 border-l-2 border-brand-500 pl-2">2. Документы и Состояние</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Тип документа</label>
+                            <select id="filter-doc" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                                <option value="">Любые документы</option>
+                                <option value="Salvage">Salvage</option>
+                                <option value="Clean Title">Clean Title</option>
+                                <option value="Certificate of Destruction">Certificate of Destruction</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Основное повреждение</label>
+                            <select id="filter-damage" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                                <option value="">Любые повреждения</option>
+                                <option value="Front End">Front End (Передняя часть)</option>
+                                <option value="Side">Side (Боковой удар)</option>
+                                <option value="Rear">Rear (Задняя часть)</option>
+                                <option value="Hail">Hail (Град)</option>
+                                <option value="Flood">Flood (Утопленник)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Ключ зажигания</label>
+                            <select id="filter-key" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                                <option value="">Не важно</option>
+                                <option value="yes">Есть ключ</option>
+                                <option value="no">Нет ключа</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Статус Run & Drive</label>
+                            <select id="filter-run-drive" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                                <option value="">Не важно</option>
+                                <option value="yes">Заводится и едет (Yes)</option>
+                                <option value="no">Нет (No)</option>
+                            </select>
+                        </div>
                     </div>
+                </div>
 
-                    <!-- Первичное повреждение (Primary Damage) -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Основное повреждение</label>
-                        <select id="filter-damage" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
-                            <option value="">Любые повреждения</option>
-                            <option value="Front End">Front End (Передняя часть)</option>
-                            <option value="Side">Side (Боковой удар)</option>
-                            <option value="Rear">Rear (Задняя часть)</option>
-                            <option value="Undercarriage">Undercarriage (Дно/Подвеска)</option>
-                            <option value="Hail">Hail (Град)</option>
-                            <option value="Flood">Flood (Утопленник)</option>
-                            <option value="Normal Wear">Normal Wear (Нормальный износ)</option>
-                        </select>
+                <!-- GROUP 3: Технические характеристики -->
+                <div class="space-y-3 pt-3 border-t border-slate-800/80">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-brand-400 border-l-2 border-brand-500 pl-2">3. Технические характеристики</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Тип топлива</label>
+                            <select id="filter-fuel" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                                <option value="">Любое топливо</option>
+                                <option value="Gasoline">Gasoline (Бензин)</option>
+                                <option value="Hybrid">Hybrid (Гибрид)</option>
+                                <option value="Electric">Electric (Электро)</option>
+                                <option value="Diesel">Diesel (Дизель)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Коробка передач</label>
+                            <select id="filter-transmission" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                                <option value="">Любая КПП</option>
+                                <option value="Automatic">Automatic (Автомат)</option>
+                                <option value="Manual">Manual (Механика)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Привод</label>
+                            <select id="filter-drive" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+                                <option value="">Любой привод</option>
+                                <option value="AWD / 4WD">AWD / 4WD (Полный)</option>
+                                <option value="FWD">FWD (Передний)</option>
+                                <option value="RWD">RWD (Задний)</option>
+                            </select>
+                        </div>
                     </div>
-
-                    <!-- Вторичное повреждение (Secondary Damage) -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Вторичное повреждение</label>
-                        <select id="filter-secondary-damage" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
-                            <option value="">Не важно</option>
-                            <option value="None">None (Нет)</option>
-                            <option value="All Over">All Over (По всему кузову)</option>
-                            <option value="Mechanical">Mechanical (Механические)</option>
-                            <option value="Biohazard">Biohazard / Chemical</option>
-                        </select>
-                    </div>
-
-                    <!-- Тип топлива (Fuel Type) -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Тип топлива</label>
-                        <select id="filter-fuel" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
-                            <option value="">Любое топливо</option>
-                            <option value="Gasoline">Gasoline (Бензин)</option>
-                            <option value="Hybrid">Hybrid (Гибрид)</option>
-                            <option value="Electric">Electric (Электро)</option>
-                            <option value="Diesel">Diesel (Дизель)</option>
-                        </select>
-                    </div>
-
-                    <!-- Трансмиссия (Transmission) -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Коробка передач</label>
-                        <select id="filter-transmission" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
-                            <option value="">Любая КПП</option>
-                            <option value="Automatic">Automatic (Автомат)</option>
-                            <option value="Manual">Manual (Механика)</option>
-                        </select>
-                    </div>
-
-                    <!-- Привод (Drive Line) -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Привод</label>
-                        <select id="filter-drive" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
-                            <option value="">Любой привод</option>
-                            <option value="AWD / 4WD">AWD / 4WD (Полный)</option>
-                            <option value="FWD">FWD (Передний)</option>
-                            <option value="RWD">RWD (Задний)</option>
-                        </select>
-                    </div>
-
-                    <!-- Наличие ключа (Key) -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Ключ зажигания</label>
-                        <select id="filter-key" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
-                            <option value="">Не важно</option>
-                            <option value="yes">Есть ключ</option>
-                            <option value="no">Нет ключа</option>
-                        </select>
-                    </div>
-
-                    <!-- Статус Run & Drive -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Статус Run & Drive</label>
-                        <select id="filter-run-drive" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
-                            <option value="">Не важно</option>
-                            <option value="yes">Заводится и едет (Yes)</option>
-                            <option value="no">Нет (No)</option>
-                        </select>
-                    </div>
-
                 </div>
 
             </div>
@@ -243,7 +220,7 @@
         <section id="section-add" class="hidden space-y-6 max-w-3xl mx-auto">
             <div class="bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-2xl">
                 <h1 class="text-2xl font-bold mb-2 text-white">Добавить лот в базу данных</h1>
-                <p class="text-sm text-slate-400 mb-6">Полный набор параметров Copart для точного отображения характеристик.</p>
+                <p class="text-sm text-slate-400 mb-6">Заполните характеристики для мгновенной публикации в каталоге.</p>
                 
                 <form id="add-car-form" onsubmit="handleCarSubmit(event)" class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -252,7 +229,7 @@
                             <input type="text" id="new-make" required placeholder="BMW" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brand-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Модель / Серия</label>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Модель</label>
                             <input type="text" id="new-model" required placeholder="530e xDrive Hybrid" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brand-500">
                         </div>
                     </div>
@@ -263,7 +240,7 @@
                             <input type="number" id="new-year" required value="2018" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brand-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Цена / Ставка ($)</label>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Цена ($)</label>
                             <input type="number" id="new-price" required value="11500" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brand-500">
                         </div>
                         <div>
@@ -289,23 +266,15 @@
                             <select id="new-doc" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brand-500">
                                 <option value="Salvage">Salvage</option>
                                 <option value="Clean Title">Clean Title</option>
-                                <option value="Certificate of Destruction">Certificate of Destruction</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Первичное повреждение</label>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Повреждение</label>
                             <input type="text" id="new-damage" placeholder="Front End" value="Front End" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brand-500">
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Вторичное повреждение</label>
-                            <input type="text" id="new-secondary-damage" placeholder="None" value="None" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brand-500">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Топливо</label>
                             <select id="new-fuel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brand-500">
@@ -315,6 +284,9 @@
                                 <option value="Diesel">Diesel</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">КПП</label>
                             <select id="new-transmission" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brand-500">
@@ -340,7 +312,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Run & Drive (Заводится и едет)</label>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Run & Drive</label>
                         <select id="new-run-drive" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brand-500">
                             <option value="yes">Да (Yes)</option>
                             <option value="no">Нет (No)</option>
@@ -467,7 +439,7 @@
 
         function loadFallbackCars() {
             sampleCars = [
-                { id: 1, make: 'BMW', model: 'BMW 530e xDrive Hybrid', year: 2018, price: 11500, mileage: 68000, doc: 'Salvage', damage: 'Front End', secondaryDamage: 'None', fuel: 'Hybrid', transmission: 'Automatic', drive: 'AWD / 4WD', key: 'yes', runAndDrive: 'yes', auction: 'copart', lot: '48291024' }
+                { id: 1, make: 'BMW', model: 'BMW 530e xDrive Hybrid', year: 2018, price: 11500, mileage: 68000, doc: 'Salvage', damage: 'Front End', fuel: 'Hybrid', transmission: 'Automatic', drive: 'AWD / 4WD', key: 'yes', runAndDrive: 'yes', auction: 'copart', lot: '48291024' }
             ];
         }
 
@@ -489,7 +461,6 @@
             document.getElementById('filter-max-price').value = '';
             document.getElementById('filter-max-mileage').value = '';
             document.getElementById('filter-damage').value = '';
-            document.getElementById('filter-secondary-damage').value = '';
             document.getElementById('filter-fuel').value = '';
             document.getElementById('filter-transmission').value = '';
             document.getElementById('filter-drive').value = '';
@@ -498,6 +469,7 @@
             applyFilters();
         }
 
+        // Оптимизированная и надежная логика фильтрации
         function applyFilters() {
             const searchQuery = document.getElementById('filter-search').value.toLowerCase().trim();
             const make = document.getElementById('filter-make').value;
@@ -508,7 +480,6 @@
             const maxPrice = parseFloat(document.getElementById('filter-max-price').value) || Infinity;
             const maxMileage = parseFloat(document.getElementById('filter-max-mileage').value) || Infinity;
             const damage = document.getElementById('filter-damage').value;
-            const secondaryDamage = document.getElementById('filter-secondary-damage').value;
             const fuel = document.getElementById('filter-fuel').value;
             const transmission = document.getElementById('filter-transmission').value;
             const drive = document.getElementById('filter-drive').value;
@@ -530,7 +501,6 @@
                 if (car.price > maxPrice) return false;
                 if (car.mileage > maxMileage) return false;
                 if (damage && car.damage !== damage) return false;
-                if (secondaryDamage && car.secondaryDamage !== secondaryDamage) return false;
                 if (fuel && car.fuel !== fuel) return false;
                 if (transmission && car.transmission !== transmission) return false;
                 if (drive && car.drive !== drive) return false;
@@ -621,10 +591,6 @@
                         <span class="text-xl font-bold text-white mt-1 block">${car.damage || 'N/A'}</span>
                     </div>
                     <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <span class="text-xs text-slate-500 block font-semibold">Вторичное повреждение</span>
-                        <span class="text-xl font-bold text-white mt-1 block">${car.secondaryDamage || 'None'}</span>
-                    </div>
-                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
                         <span class="text-xs text-slate-500 block font-semibold">Топливо / КПП / Привод</span>
                         <span class="text-sm font-bold text-white mt-1.5 block">${car.fuel || 'Gas'} / ${car.transmission || 'Auto'} / ${car.drive || 'AWD'}</span>
                     </div>
@@ -684,7 +650,6 @@
                 lot: document.getElementById('new-lot').value,
                 doc: document.getElementById('new-doc').value,
                 damage: document.getElementById('new-damage').value,
-                secondaryDamage: document.getElementById('new-secondary-damage').value,
                 fuel: document.getElementById('new-fuel').value,
                 transmission: document.getElementById('new-transmission').value,
                 drive: document.getElementById('new-drive').value,
