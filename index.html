@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carseekers — Подбор и расчет стоимости авто из США</title>
+    <title>Carseekers — Профессиональный подбор авто из США</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS SDK -->
@@ -34,30 +34,52 @@
                 <div class="bg-brand-600 text-white p-2 rounded-lg font-bold text-xl tracking-wider">CS</div>
                 <span class="text-xl font-extrabold tracking-tight text-white">Carseekers</span>
             </div>
-            <nav class="flex space-x-1 sm:space-x-4">
+            <nav class="flex space-x-1 sm:space-x-3">
                 <button onclick="switchTab('search')" id="tab-search" class="px-3 py-2 rounded-md text-sm font-medium transition-colors bg-brand-600 text-white">Поиск лотов</button>
-                <button onclick="switchTab('calculator')" id="tab-calculator" class="px-3 py-2 rounded-md text-sm font-medium transition-colors text-slate-300 hover:text-white hover:bg-slate-700">Калькулятор растаможки</button>
+                <button onclick="switchTab('add')" id="tab-add" class="px-3 py-2 rounded-md text-sm font-medium transition-colors text-slate-300 hover:text-white hover:bg-slate-700">+ Добавить лот</button>
+                <button onclick="switchTab('calculator')" id="tab-calculator" class="px-3 py-2 rounded-md text-sm font-medium transition-colors text-slate-300 hover:text-white hover:bg-slate-700">Калькулятор</button>
             </nav>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
 
-        <!-- SEARCH TAB -->
+        <!-- SEARCH TAB & ADVANCED COPART FILTERS -->
         <section id="section-search" class="space-y-6">
-            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                <h1 class="text-2xl font-bold mb-4 text-white">Каталог лотов из США</h1>
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700 pb-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Расширенный поиск лотов (Copart / IAAI)</h1>
+                        <p class="text-xs text-slate-400 mt-1">Фильтрация параметров в реальном времени из базы данных</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="resetFilters()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-2 rounded-lg transition-colors">Сбросить фильтры</button>
+                        <button onclick="fetchCarsFromSupabase()" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-lg transition-colors">🔄 Обновить</button>
+                    </div>
+                </div>
                 
-                <!-- Filters -->
+                <!-- Copart-style Filter Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Поиск по тексту (Модель / Лоты) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Поиск по модели / лоту</label>
+                        <input type="text" id="filter-search" placeholder="Напр. 530e или 4829" oninput="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                    </div>
+
+                    <!-- Марка -->
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Марка</label>
                         <select id="filter-make" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
                             <option value="">Все марки</option>
                             <option value="BMW">BMW</option>
+                            <option value="Audi">Audi</option>
+                            <option value="Mercedes-Benz">Mercedes-Benz</option>
+                            <option value="Ford">Ford</option>
                         </select>
                     </div>
+
+                    <!-- Аукцион -->
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Аукцион</label>
                         <select id="filter-auction" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
@@ -66,6 +88,8 @@
                             <option value="iaai">IAAI</option>
                         </select>
                     </div>
+
+                    <!-- Тип документа -->
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Тип документа</label>
                         <select id="filter-doc" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
@@ -74,16 +98,140 @@
                             <option value="Clean Title">Clean Title</option>
                         </select>
                     </div>
+
+                    <!-- Год ОТ / ДО -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Год от</label>
+                            <input type="number" id="filter-year-min" placeholder="2015" oninput="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Год до</label>
+                            <input type="number" id="filter-year-max" placeholder="2026" oninput="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                        </div>
+                    </div>
+
+                    <!-- Цена ДО -->
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Макс. цена ($)</label>
-                        <input type="number" id="filter-max-price" placeholder="Например, 15000" oninput="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                        <input type="number" id="filter-max-price" placeholder="Например, 20000" oninput="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                    </div>
+
+                    <!-- Пробег ДО -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Макс. пробег (mi)</label>
+                        <input type="number" id="filter-max-mileage" placeholder="Например, 80000" oninput="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                    </div>
+
+                    <!-- Характер повреждения -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Повреждение</label>
+                        <select id="filter-damage" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                            <option value="">Любые повреждения</option>
+                            <option value="Front End">Front End (Передняя часть)</option>
+                            <option value="Side">Side (Боковой)</option>
+                            <option value="Rear">Rear (Задняя часть)</option>
+                            <option value="Hail">Hail (Град)</option>
+                            <option value="Flood">Flood (Утопленник)</option>
+                        </select>
+                    </div>
+
+                    <!-- Наличие ключа -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Ключ</label>
+                        <select id="filter-key" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                            <option value="">Не важно</option>
+                            <option value="yes">Есть ключ</option>
+                            <option value="no">Нет ключа</option>
+                        </select>
                     </div>
                 </div>
+            </div>
+
+            <!-- Cars Grid Counter & Results -->
+            <div class="flex justify-between items-center px-1">
+                <span id="results-count" class="text-sm text-slate-400 font-medium">Найдено лотов: 0</span>
             </div>
 
             <!-- Cars Grid -->
             <div id="cars-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Динамически заполняется скриптом -->
+            </div>
+        </section>
+
+        <!-- ADD CAR TAB -->
+        <section id="section-add" class="hidden space-y-6 max-w-2xl mx-auto">
+            <div class="bg-slate-800 p-6 sm:p-8 rounded-xl border border-slate-700 shadow-xl">
+                <h1 class="text-2xl font-bold mb-2 text-white">Добавить новый лот в Supabase</h1>
+                <p class="text-sm text-slate-400 mb-6">Заполните данные автомобиля, и он сразу появится в общем каталоге.</p>
+                
+                <form id="add-car-form" onsubmit="handleCarSubmit(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Марка</label>
+                            <input type="text" id="new-make" required placeholder="BMW" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Модель</label>
+                            <input type="text" id="new-model" required placeholder="530e xDrive Hybrid" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Год выпуска</label>
+                            <input type="number" id="new-year" required value="2018" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Цена ($)</label>
+                            <input type="number" id="new-price" required value="11500" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Пробег (mi)</label>
+                            <input type="number" id="new-mileage" required value="68000" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Аукцион</label>
+                            <select id="new-auction" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                                <option value="copart">Copart</option>
+                                <option value="iaai">IAAI</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Номер лота</label>
+                            <input type="text" id="new-lot" required placeholder="48291024" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Тип документа</label>
+                            <select id="new-doc" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                                <option value="Salvage">Salvage</option>
+                                <option value="Clean Title">Clean Title</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Повреждение</label>
+                            <input type="text" id="new-damage" placeholder="Front End" value="Front End" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Ключ</label>
+                            <select id="new-key" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                                <option value="yes">Есть</option>
+                                <option value="no">Нет</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex justify-end gap-3">
+                        <button type="button" onclick="switchTab('search')" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-4 py-2 rounded-lg transition-colors">Отмена</button>
+                        <button type="submit" id="submit-btn" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-6 py-2 rounded-lg transition-colors">Сохранить в базу</button>
+                    </div>
+                </form>
             </div>
         </section>
 
@@ -165,13 +313,15 @@
         // Переключение вкладок
         function switchTab(tabId) {
             document.getElementById('section-search').classList.add('hidden');
+            document.getElementById('section-add').classList.add('hidden');
             document.getElementById('section-detail').classList.add('hidden');
             document.getElementById('section-calculator').classList.add('hidden');
             
             document.getElementById('tab-search').className = 'px-3 py-2 rounded-md text-sm font-medium transition-colors text-slate-300 hover:text-white hover:bg-slate-700';
+            document.getElementById('tab-add').className = 'px-3 py-2 rounded-md text-sm font-medium transition-colors text-slate-300 hover:text-white hover:bg-slate-700';
             document.getElementById('tab-calculator').className = 'px-3 py-2 rounded-md text-sm font-medium transition-colors text-slate-300 hover:text-white hover:bg-slate-700';
 
-            if (tabId === 'search' || tabId === 'calculator') {
+            if (tabId === 'search' || tabId === 'add' || tabId === 'calculator') {
                 document.getElementById('section-' + tabId).classList.remove('hidden');
                 document.getElementById('tab-' + tabId).className = 'px-3 py-2 rounded-md text-sm font-medium transition-colors bg-brand-600 text-white';
             } else if (tabId === 'detail') {
@@ -187,13 +337,13 @@
             }
 
             try {
-                const { data, error } = await supabaseClient.from('cars').select('*');
+                const { data, error } = await supabaseClient.from('cars').select('*').order('id', { ascending: false });
                 if (error) throw error;
                 
                 if (data && data.length > 0) {
                     sampleCars = data;
                 } else {
-                    loadFallbackCars();
+                    sampleCars = [];
                 }
             } catch (err) {
                 console.error('Ошибка загрузки из Supabase:', err);
@@ -204,26 +354,60 @@
 
         function loadFallbackCars() {
             sampleCars = [
-                { id: 1, make: 'BMW', model: 'BMW 530e xDrive Hybrid', year: 2018, price: 11500, mileage: 68000, doc: 'Salvage', damage: 'Front End', key: 'yes', auction: 'copart', lot: '48291024' },
-                { id: 2, make: 'BMW', model: 'BMW 430i Gran Coupe', year: 2020, price: 14200, mileage: 45000, doc: 'Clean Title', damage: 'Side', key: 'yes', auction: 'iaai', lot: '91823741' }
+                { id: 1, make: 'BMW', model: 'BMW 530e xDrive Hybrid', year: 2018, price: 11500, mileage: 68000, doc: 'Salvage', damage: 'Front End', key: 'yes', auction: 'copart', lot: '48291024' }
             ];
         }
 
-        // Применение фильтров
+        // Сброс фильтров
+        function resetFilters() {
+            document.getElementById('filter-search').value = '';
+            document.getElementById('filter-make').value = '';
+            document.getElementById('filter-auction').value = '';
+            document.getElementById('filter-doc').value = '';
+            document.getElementById('filter-year-min').value = '';
+            document.getElementById('filter-year-max').value = '';
+            document.getElementById('filter-max-price').value = '';
+            document.getElementById('filter-max-mileage').value = '';
+            document.getElementById('filter-damage').value = '';
+            document.getElementById('filter-key').value = '';
+            applyFilters();
+        }
+
+        // Продвинутая фильтрация (Copart style)
         function applyFilters() {
+            const searchQuery = document.getElementById('filter-search').value.toLowerCase().trim();
             const make = document.getElementById('filter-make').value;
             const auction = document.getElementById('filter-auction').value;
             const doc = document.getElementById('filter-doc').value;
+            const yearMin = parseInt(document.getElementById('filter-year-min').value) || 0;
+            const yearMax = parseInt(document.getElementById('filter-year-max').value) || Infinity;
             const maxPrice = parseFloat(document.getElementById('filter-max-price').value) || Infinity;
+            const maxMileage = parseFloat(document.getElementById('filter-max-mileage').value) || Infinity;
+            const damage = document.getElementById('filter-damage').value;
+            const key = document.getElementById('filter-key').value;
 
             const filtered = sampleCars.filter(car => {
+                // Поиск по текстовому запросу (модель или номер лота)
+                if (searchQuery) {
+                    const matchModel = car.model && car.model.toLowerCase().includes(searchQuery);
+                    const matchLot = car.lot && String(car.lot).toLowerCase().includes(searchQuery);
+                    const matchMake = car.make && car.make.toLowerCase().includes(searchQuery);
+                    if (!matchModel && !matchLot && !matchMake) return false;
+                }
+
                 if (make && car.make !== make) return false;
                 if (auction && car.auction !== auction) return false;
                 if (doc && car.doc !== doc) return false;
+                if (car.year < yearMin || car.year > yearMax) return false;
                 if (car.price > maxPrice) return false;
+                if (car.mileage > maxMileage) return false;
+                if (damage && car.damage !== damage) return false;
+                if (key && car.key !== key) return false;
+
                 return true;
             });
 
+            document.getElementById('results-count').innerText = `Найдено лотов: ${filtered.length}`;
             renderCars(filtered);
         }
 
@@ -233,7 +417,10 @@
             grid.innerHTML = '';
 
             if (cars.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">Лоты не найдены</div>`;
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 space-y-3 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                        <p class="text-slate-400">По вашему запросу ничего не найдено. Измените параметры фильтрации.</p>
+                    </div>`;
                 return;
             }
 
@@ -336,6 +523,48 @@
             document.getElementById('res-shipping').innerText = '$' + shipping.toLocaleString();
             document.getElementById('res-customs').innerText = '$' + Math.round(customs).toLocaleString();
             document.getElementById('res-total').innerText = '$' + Math.round(total).toLocaleString();
+        }
+
+        // Отправка нового лота
+        async function handleCarSubmit(event) {
+            event.preventDefault();
+            if (!supabaseClient) {
+                alert('Ошибка: клиент Supabase не инициализирован');
+                return;
+            }
+
+            const newCar = {
+                make: document.getElementById('new-make').value,
+                model: document.getElementById('new-model').value,
+                year: parseInt(document.getElementById('new-year').value),
+                price: parseFloat(document.getElementById('new-price').value),
+                mileage: parseFloat(document.getElementById('new-mileage').value),
+                auction: document.getElementById('new-auction').value,
+                lot: document.getElementById('new-lot').value,
+                doc: document.getElementById('new-doc').value,
+                damage: document.getElementById('new-damage').value,
+                key: document.getElementById('new-key').value
+            };
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerText = 'Сохранение...';
+
+            try {
+                const { error } = await supabaseClient.from('cars').insert([newCar]);
+                if (error) throw error;
+
+                alert('Лот успешно добавлен в базу Supabase!');
+                document.getElementById('add-car-form').reset();
+                await fetchCarsFromSupabase();
+                switchTab('search');
+            } catch (err) {
+                console.error('Ошибка при добавлении лота:', err);
+                alert('Не удалось добавить лот. Проверьте уникальность номера лота.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Сохранить в базу';
+            }
         }
 
         window.onload = function() {
